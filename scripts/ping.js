@@ -21,7 +21,7 @@ module.exports = (robot) => {
     res.send('PONG');
   });
 
-  robot.respond(/a$/i, (res) => {
+  robot.respond(/a$/i, (resp) => {
     const req = https.request(url, (res) => {
       // console.log(res);
       let body = '';
@@ -33,6 +33,7 @@ module.exports = (robot) => {
         res = JSON.parse(body);
         for (let i = 0; i < Object.keys(res.rest).length; i++) { 
           console.log(res.rest[i].name);
+          resp.send(res.rest[i].name + '\n' + res.rest[i].category + '\n' + res.rest[i].url);
         }
           
       });
