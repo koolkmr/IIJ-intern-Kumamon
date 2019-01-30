@@ -21,7 +21,7 @@ module.exports = (robot) => {
     res.send('PONG');
   });
 
-  robot.respond(/a$/i, (resp) => {
+  robot.respond(/らんちーむお昼探して$/i, (resp) => {
     const req = https.request(url, (res) => {
       // console.log(res);
       let body = '';
@@ -35,6 +35,10 @@ module.exports = (robot) => {
           console.log(res.rest[i].name);
           resp.send(res.rest[i].name + '\n' + res.rest[i].category + '\n' + res.rest[i].url);
         }
+        sendSelectButton(res, resp);
+        setTimeout(() => {
+          robot.send({ room: roomId }, {close_select: messageId});
+        }, 6000)
           
       });
     })
@@ -45,7 +49,22 @@ module.exports = (robot) => {
 
     req.end();
     
+    
   });
+
+  function sendSelectButton(res, resp){
+    resp.send({
+        question: 'この周辺のお店でどこがいいか',
+        options: [res.rest[0].name, res.rest[1].name, res.rest[2].name,res.rest[3].name,res.rest[4].name], //ここにAPIからの5件を格納
+        closing_type: 1, //0 => 1人が回答, 1 => 全員が回答
+        onsend: (sent) => {
+            //res.send(`completed. messageId: ${sent.message.id}`); //デバッグ用
+            messageId = sent.message.id;
+        }
+    });
+    //res.send(`This room id is ${res.message.room}`); //デバッグ用
+    roomId = resp.message.room;
+  }
 
   robot.respond(/ADAPTER$/i, (res) => {
     res.send(robot.adapterName);
