@@ -9,11 +9,15 @@
 
 module.exports = (robot) => {
   const https = require('https');
- 
+  var messageId;
+  var roomId;
+  var lat;
+  var lng;
+  
 
   var gurunaviAPI = 'e0c8d42fc13d93b856b036308c97368c';//取得したアクセスキー
   var url = 'https://api.gnavi.co.jp/RestSearchAPI/v3/?keyid=e0c8d42fc13d93b856b036308c97368c&latitude=36.228067&longitude=137.969049&hit_per_page=5';
-  console.log(url);
+  // console.log(url);
   // url = url + 'keyid='+ gurunaviAPI;
   // url = url + '&freeword=ラーメン';
 
@@ -21,36 +25,47 @@ module.exports = (robot) => {
     res.send('PONG');
   });
 
-  robot.respond(/らんちーむお昼探して$/i, (resp) => {
-    const req = https.request(url, (res) => {
-      // console.log(res);
-      let body = '';
-      res.setEncoding('utf8');
-      res.on('data', (chunk) => {
-        body += chunk;
-      });
-      res.on('end', () => {
-        res = JSON.parse(body);
-        for (let i = 0; i < Object.keys(res.rest).length; i++) { 
-          console.log(res.rest[i].name);
-          resp.send(res.rest[i].name + '\n' + res.rest[i].category + '\n' + res.rest[i].url);
-        }
-        sendSelectButton(res, resp);
-        setTimeout(() => {
-          robot.send({ room: roomId }, {close_select: messageId});
-        }, 6000)
-          
-      });
-    })
+  robot.respond(/らんちーむ$/i, (resp) => {
+    resp.send("今ココスタンプを押してください");
+    robot.respond('map', (res) => {
+      // res.send(`Your location is ${res.json.place} at ${res.json.lat}, ${res.json.lng}`);
+      let lat = res.json.lat;
+      let lng = res.json.lng;
+      url = url + '&latitude='+lat+'&longitude='+lng;
 
-    req.on('error', (e) => {
-      console.error(`problem with request: ${e.message}`);
+      const req = https.request(url, (res) => {
+        // console.log(res);
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          body += chunk;
+        });
+        res.on('end', () => {
+          res = JSON.parse(body);
+          for (let i = 0; i < Object.keys(res.rest).length; i++) { 
+            console.log(res.rest[i].name);
+            resp.send(res.rest[i].name + '\n' + res.rest[i].category + '\n' + res.rest[i].url);
+          }
+          sendSelectButton(res, resp);
+          setTimeout(() => {
+            robot.send({ room: roomId }, {close_select: messageId});
+          }, 30000)
+            
+        });
+      })
+  
+      req.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+      });
+  
+      req.end();
     });
-
-    req.end();
+    
     
     
   });
+
+  
 
   function sendSelectButton(res, resp){
     resp.send({
